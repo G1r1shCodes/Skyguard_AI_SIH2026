@@ -43,7 +43,7 @@ const DEFAULT_STATION = "AWS_GAMMA_URBAN";
 // stations (mirrors backend/app/core/config.py). has_real_data is unknown when
 // offline, so it's reported false.
 const FALLBACK_STATIONS: StationMeta[] = [
-  { station_id: "AWS_ALPHA_MOUNTAIN", name: "Alpha Ridge (Highland Station)", station_type: "Mountain", latitude: 34.125, longitude: -117.85, elevation_m: 2150, base_temp_c: 12, temp_diurnal_range_c: 16, base_pressure_hpa: 785, base_humidity_pct: 45, humidity_diurnal_range_pct: 30, has_real_data: false },
+  { station_id: "AWS_ALPHA_MOUNTAIN", name: "Alpha Ridge (Highland Station)", station_type: "Mountain", latitude: 31.104, longitude: 77.173, elevation_m: 2150, base_temp_c: 12, temp_diurnal_range_c: 16, base_pressure_hpa: 785, base_humidity_pct: 45, humidity_diurnal_range_pct: 30, has_real_data: false },
   { station_id: "AWS_BETA_COASTAL", name: "Beta Coastline (Marine Station)", station_type: "Coastal", latitude: 18.922, longitude: 72.834, elevation_m: 10, base_temp_c: 27, temp_diurnal_range_c: 7, base_pressure_hpa: 1012, base_humidity_pct: 82, humidity_diurnal_range_pct: 15, has_real_data: false },
   { station_id: "AWS_GAMMA_URBAN", name: "Gamma Metropole (Urban Station)", station_type: "Urban", latitude: 28.613, longitude: 77.209, elevation_m: 216, base_temp_c: 25, temp_diurnal_range_c: 14, base_pressure_hpa: 990, base_humidity_pct: 60, humidity_diurnal_range_pct: 28, has_real_data: false },
   { station_id: "AWS_DELTA_DESERT", name: "Delta Dunes (Arid Desert Station)", station_type: "Desert", latitude: 26.915, longitude: 70.908, elevation_m: 220, base_temp_c: 34, temp_diurnal_range_c: 22, base_pressure_hpa: 995, base_humidity_pct: 22, humidity_diurnal_range_pct: 16, has_real_data: false },

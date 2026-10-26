@@ -124,11 +124,10 @@ export default function MapView() {
       scrollWheelZoom: true,
       attributionControl: true,
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
-      subdomains: "abcd",
-      maxZoom: 20,
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+      maxZoom: 19,
     }).addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);
     // Settle once after layout — avoids a half-rendered first frame in the grid.
@@ -204,7 +203,7 @@ export default function MapView() {
     }
 
     const bounds = L.latLngBounds(pins.map((p) => L.latLng(p.latlng)));
-    if (bounds.isValid()) map.fitBounds(bounds.pad(0.35), { maxZoom: 6, animate: false });
+    if (bounds.isValid()) map.fitBounds(bounds.pad(0.2), { maxZoom: 8, animate: false });
   }, [pins, active, weatherPin, faultPin, weatherChannels, faultShare]);
 
   return (

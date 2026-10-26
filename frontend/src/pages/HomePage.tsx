@@ -163,15 +163,28 @@ export default function HomePage() {
         id="hero"
         className="relative pt-32 pb-24 px-4 overflow-hidden min-h-[92vh] flex flex-col justify-between"
       >
-        {/* Background Image Layer */}
+        {/* Modern atmospheric radar grid and ambient glow */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('/hero-bg.jpg')` }}
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              radial-gradient(rgba(29, 111, 224, 0.09) 1.5px, transparent 1.5px),
+              linear-gradient(to bottom, #ffffff 0%, #f6f8fb 100%)
+            `,
+            backgroundSize: "28px 28px, 100% 100%",
+          }}
         />
 
-        {/* Soft atmospheric gradient masks for typography legibility */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-b from-white/70 via-white/40 to-stratus" />
-        <div className="absolute inset-0 z-0 bg-radial from-transparent via-white/20 to-white/70" />
+        {/* Ambient atmospheric radial lights */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[380px] bg-gradient-to-tr from-azimuth/15 via-cyan-400/10 to-indigo-500/15 rounded-full blur-3xl pointer-events-none z-0" />
+
+        {/* Subtle radar range rings for atmospheric command aesthetic */}
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-azimuth/10 pointer-events-none z-0" />
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full border border-azimuth/5 pointer-events-none z-0" />
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full border border-azimuth/[0.03] pointer-events-none z-0" />
+
+        {/* Gentle transition blend into the next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-stratus to-transparent z-0 pointer-events-none" />
 
         {/* Hero Copy */}
         <div className="relative z-10 mx-auto max-w-4xl text-center pt-8">
