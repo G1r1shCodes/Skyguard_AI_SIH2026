@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useMatches, useLocation } from "react-router";
 import {
+  Home,
   LayoutGrid,
   Activity,
   RadioTower,
@@ -16,6 +17,7 @@ import ProductTour from "../components/ProductTour";
 // Same IA as the desktop NavRail, kept in sync by hand — if a route is added,
 // update BOTH lists.
 const mobileNavItems = [
+  { to: "/", label: "Home", icon: Home },
   { to: "/overview", label: "Overview", icon: LayoutGrid },
   { to: "/live", label: "Live", icon: Activity },
   { to: "/stations", label: "Stations", icon: RadioTower },

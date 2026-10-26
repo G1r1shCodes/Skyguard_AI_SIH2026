@@ -1,5 +1,6 @@
-import { NavLink } from "react-router";
+import { NavLink, Link } from "react-router";
 import {
+  Home,
   LayoutGrid,
   Activity,
   RadioTower,
@@ -43,12 +44,25 @@ export default function NavRail() {
 
   return (
     <aside className="flex w-[248px] shrink-0 flex-col border-r border-mist bg-frost px-4 py-5">
-      <div className="flex items-center gap-2.5 px-2">
-        <LogoMark className="h-9 w-9" />
+      <Link
+        to="/"
+        title="Return to Landing Page"
+        className="flex items-center gap-2.5 px-2 group transition-opacity hover:opacity-85"
+      >
+        <LogoMark className="h-9 w-9 transition-transform group-hover:scale-105" />
         <span className="font-display text-[17px] font-semibold text-ink">SkyGuard AI</span>
+      </Link>
+
+      <div className="mt-4 px-2">
+        <Link
+          to="/"
+          className="flex items-center gap-2 rounded-xl border border-mist bg-white px-3 py-1.5 text-xs font-semibold text-haze transition-colors hover:border-azimuth/40 hover:text-ink"
+        >
+          <Home size={14} /> Back to Landing Page
+        </Link>
       </div>
 
-      <nav className="mt-7 flex flex-col gap-1">
+      <nav className="mt-4 flex flex-col gap-1">
         {items.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

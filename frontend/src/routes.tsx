@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import AppLayout from "./layout/AppLayout";
+import HomePage from "./pages/HomePage";
 import Overview from "./pages/Overview";
 import LiveMonitor from "./pages/LiveMonitor";
 import Stations from "./pages/Stations";
@@ -13,9 +14,12 @@ import Settings from "./pages/Settings";
 export const router = createBrowserRouter([
   {
     path: "/",
+    Component: HomePage,
+  },
+  {
+    path: "/",
     Component: AppLayout,
     children: [
-      { index: true, Component: () => <Navigate to="/overview" replace /> },
       { path: "overview", Component: Overview, handle: { title: "Overview" } },
       { path: "live", Component: LiveMonitor, handle: { title: "Live Monitor" } },
       { path: "stations", Component: Stations, handle: { title: "Stations" } },
@@ -25,7 +29,7 @@ export const router = createBrowserRouter([
       { path: "analytics", Component: Analytics, handle: { title: "Model analytics" } },
       { path: "map", Component: MapView, handle: { title: "Network map" } },
       { path: "settings", Component: Settings, handle: { title: "Settings" } },
-      { path: "*", Component: () => <Navigate to="/overview" replace /> },
+      { path: "*", Component: () => <Navigate to="/" replace /> },
     ],
   },
 ]);
