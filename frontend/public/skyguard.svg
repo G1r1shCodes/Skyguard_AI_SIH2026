@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- SkyGuard mark: watchtower shield broadcasting weather-station telemetry -->
+  <path d="M24 3 L41 9 V23 C41 33.5 34.2 40.6 24 45 C13.8 40.6 7 33.5 7 23 V9 Z" fill="#1d6fe0"/>
+  <g stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" fill="none">
+    <path d="M24 17 L19.5 36 M24 17 L28.5 36"/>
+    <path d="M21.6 26.5 H26.4 M20.4 31.5 H27.6"/>
+    <path d="M19.24 12.75 A5.5 5.5 0 0 1 28.76 12.75" opacity="0.95" stroke-width="2.2"/>
+    <path d="M15.77 10.75 A9.5 9.5 0 0 1 32.23 10.75" opacity="0.5" stroke-width="2.2"/>
+  </g>
+  <circle cx="24" cy="15.5" r="2.2" fill="#ffffff"/>
+</svg>

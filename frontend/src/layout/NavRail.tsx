@@ -8,8 +8,8 @@ import {
   ChartLine,
   Map as MapIcon,
   Settings as SettingsIcon,
-  Radar,
 } from "lucide-react";
+import LogoMark from "../components/LogoMark";
 import { useStream } from "../lib/StreamProvider";
 
 const items = [
@@ -44,9 +44,7 @@ export default function NavRail() {
   return (
     <aside className="flex w-[248px] shrink-0 flex-col border-r border-mist bg-frost px-4 py-5">
       <div className="flex items-center gap-2.5 px-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-azimuth text-white shadow-card">
-          <Radar size={19} strokeWidth={1.5} />
-        </div>
+        <LogoMark className="h-9 w-9" />
         <span className="font-display text-[17px] font-semibold text-ink">SkyGuard AI</span>
       </div>
 
@@ -85,7 +83,7 @@ export default function NavRail() {
           {sys.text}
         </div>
         <div className="flex items-center gap-2.5 rounded-xl border border-mist bg-white px-3 py-2">
-          <Radar size={15} strokeWidth={1.5} className="shrink-0 text-azimuth" />
+          <LogoMark className="h-5 w-5 shrink-0" />
           <div className="text-[11px] leading-tight">
             <div className="font-semibold text-ink">Smart India Hackathon 2026</div>
             <div className="font-mono text-haze">Problem Statement 26073</div>

@@ -8,7 +8,9 @@ import ExplainableAI from "../components/ExplainableAI";
 export default function LiveMonitor() {
   return (
     <div className="flex flex-col gap-6">
-      <ControlStrip />
+      <div data-tour="live-controls">
+        <ControlStrip />
+      </div>
       <StatCards />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
@@ -18,8 +20,12 @@ export default function LiveMonitor() {
           <HealthRadar />
         </div>
       </div>
-      <InjectionSandbox />
-      <ExplainableAI />
+      <div data-tour="injection">
+        <InjectionSandbox />
+      </div>
+      <div data-tour="explain">
+        <ExplainableAI />
+      </div>
     </div>
   );
 }

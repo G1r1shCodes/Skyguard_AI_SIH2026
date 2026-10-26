@@ -77,12 +77,13 @@ export default function Overview() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div data-tour="overview-kpis" className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {kpis.map((k) => (
           <KpiCard key={k.label} {...k} />
         ))}
       </div>
 
+      <div data-tour="verdict-band">
       <Card status="idle" className="p-5">
         <SectionTitle
           title="Fault vs weather · last 24h"
@@ -104,6 +105,7 @@ export default function Overview() {
           ))}
         </div>
       </Card>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="flex flex-col gap-4 xl:col-span-2">

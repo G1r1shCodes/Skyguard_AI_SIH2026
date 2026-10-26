@@ -1,5 +1,6 @@
-import { ChevronDown, Globe, Bell } from "lucide-react";
+import { ChevronDown, Globe, Bell, CircleHelp } from "lucide-react";
 import { Link } from "react-router";
+import { startTour } from "../components/ProductTour";
 import { useStream } from "../lib/StreamProvider";
 
 export default function TopBar({ title }: { title: string }) {
@@ -53,6 +54,15 @@ export default function TopBar({ title }: { title: string }) {
         </span>
 
         <div className="mx-1 hidden h-6 w-px bg-mist sm:block" />
+
+        <button
+          onClick={startTour}
+          aria-label="Replay the getting-started tour"
+          title="Getting started tour"
+          className="flex h-9 w-9 items-center justify-center rounded-xl text-haze transition-colors hover:bg-mist/50 hover:text-ink"
+        >
+          <CircleHelp size={17} strokeWidth={1.5} />
+        </button>
 
         <Link
           to="/anomalies"

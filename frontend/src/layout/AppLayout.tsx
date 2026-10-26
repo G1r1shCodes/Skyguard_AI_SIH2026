@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import NavRail from "./NavRail";
 import TopBar from "./TopBar";
+import ProductTour from "../components/ProductTour";
 
 // Same IA as the desktop NavRail, kept in sync by hand — if a route is added,
 // update BOTH lists.
@@ -75,6 +76,8 @@ export default function AppLayout() {
           </div>
         </main>
       </div>
+      {/* First-visit guided tour + manual replay (TopBar help button) */}
+      <ProductTour />
     </div>
   );
 }

@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { Card, StatusPill, StatusSpine } from "../components/primitives";
 import { mapPins as mockPins, statusColor, type Status } from "../components/data";
 import { useStream } from "../lib/StreamProvider";
-import { toMapPin, coordinatedChannels } from "../lib/adapters";
+import { coordinatedChannels, packetStatus, packetLabel, shortName } from "../lib/adapters";
 import type { ProcessedPacket } from "../lib/types";
 
 const legend: { label: string; status: Status }[] = [
@@ -42,26 +44,58 @@ function spatialCallout(latests: ProcessedPacket[]): { status: Status; text: str
   };
 }
 
+type Pin = {
+  id: string;
+  name: string;
+  type: string;
+  temp: string;
+  status: Status;
+  label: string;
+  latlng: [number, number];
+};
+
 export default function MapView() {
   const { backendOnline, stations, latestByStation, selectedStationId, setStation } = useStream();
   const live = backendOnline;
 
-  const pins = live
-    ? stations.map((m) => toMapPin(m, latestByStation[m.station_id] ?? null))
-    : mockPins;
-
   const [active, setActive] = useState<string | null>(selectedStationId);
   const callout = live ? spatialCallout(Object.values(latestByStation)) : MOCK_CALLOUT;
 
-  // Corroboration overlay geometry. The fault pin gets an "isolated" halo (no
-  // neighbour shares its signal); the weather pin gets an arc linking it to the
-  // wider network (its shift is coordinated → genuine weather, not a fault).
-  const faultPin = pins.find((p) => p.status === "critical") ?? null;
-  const weatherPin = pins.find((p) => p.status === "weather") ?? null;
+  // Real coordinates come from station metadata (the StreamProvider keeps its
+  // built-in fallback metadata even offline, so the map always has positions).
+  // Live status/temp come from the latest packet; offline they come from the
+  // representative demo set.
+  const pins: Pin[] = stations.map((s) => {
+    const latest = latestByStation[s.station_id] ?? null;
+    if (live) {
+      return {
+        id: s.station_id,
+        name: shortName(s.name),
+        type: s.station_type,
+        temp: latest && latest.raw.temperature != null ? `${latest.raw.temperature.toFixed(1)} °C` : "—",
+        status: latest ? packetStatus(latest) : "idle",
+        label: latest ? packetLabel(latest) : "Offline",
+        latlng: [s.latitude, s.longitude] as [number, number],
+      };
+    }
+    const mock = mockPins.find((p) => p.id === s.station_id);
+    return {
+      id: s.station_id,
+      name: shortName(s.name),
+      type: s.station_type,
+      temp: mock?.temp ?? "—",
+      status: mock?.status ?? "idle",
+      label: mock?.label ?? "Demo data",
+      latlng: [s.latitude, s.longitude] as [number, number],
+    };
+  });
 
-  // Captions derived from the pin's own packet, not fixed strings: the weather
-  // arc names the channels actually shifting; the fault caption reports the real
-  // neighbour agreement count. Offline (mock) mode keeps representative demo text.
+  const weatherPin = pins.find((p) => p.status === "weather") ?? null;
+  const faultPin = pins.find((p) => p.status === "critical") ?? null;
+
+  // Captions from the pin's own packet, not fixed strings: the weather tooltip
+  // names the channels actually shifting; the fault caption reports the real
+  // neighbour agreement count. Offline keeps representative demo text.
   const weatherPacket = weatherPin ? latestByStation[weatherPin.id] : undefined;
   const weatherChannels =
     live && weatherPacket ? coordinatedChannels(weatherPacket) : "Coordinated P↓ · T↓ · RH↑";
@@ -70,34 +104,112 @@ export default function MapView() {
     live && faultSpatial && faultSpatial.other_stations_reporting > 0
       ? `${faultSpatial.other_stations_anomalous} of ${faultSpatial.other_stations_reporting} neighbours share this signal → sensor fault.`
       : "No neighbour shares this signal → sensor fault.";
-  const avg = (ns: number[]) => (ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : 0);
-  const arcNeighbours = weatherPin ? pins.filter((p) => p.id !== weatherPin.id && p.status !== "critical") : [];
-  const arcTarget = weatherPin
-    ? arcNeighbours.length
-      ? { x: avg(arcNeighbours.map((p) => p.x)), y: avg(arcNeighbours.map((p) => p.y)) }
-      : { x: 48, y: 42 }
-    : null;
-  let arcPath = "";
-  let arcLabel = { x: 0, y: 0 };
-  if (weatherPin && arcTarget) {
-    const wx = weatherPin.x, wy = weatherPin.y, tx = arcTarget.x, ty = arcTarget.y;
-    const mx = (wx + tx) / 2, my = (wy + ty) / 2;
-    const dx = tx - wx, dy = ty - wy;
-    const len = Math.hypot(dx, dy) || 1;
-    const bow = 15;
-    const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
-    arcPath = `M ${wx} ${wy} Q ${cx} ${cy} ${tx} ${ty}`;
-    arcLabel = { x: 0.25 * wx + 0.5 * cx + 0.25 * tx, y: 0.25 * wy + 0.5 * cy + 0.25 * ty };
-  }
 
   const select = (id: string) => {
     setActive(id);
     if (live) setStation(id);
   };
 
+  // ── Leaflet map lifecycle ────────────────────────────────
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const selectRef = useRef(select);
+  selectRef.current = select;
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = L.map(containerRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: true,
+      attributionControl: true,
+    });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 20,
+    }).addTo(map);
+    markerLayerRef.current = L.layerGroup().addTo(map);
+    // Settle once after layout — avoids a half-rendered first frame in the grid.
+    setTimeout(() => map.invalidateSize(), 250);
+    mapRef.current = map;
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markerLayerRef.current = null;
+    };
+  }, []);
+
+  // (Re)build markers whenever pins, selection or fault/weather state changes.
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = markerLayerRef.current;
+    if (!map || !layer) return;
+    layer.clearLayers();
+
+    // Corroboration arcs: an active weather station's shift is shared with its
+    // (non-faulted) neighbours — the flowing dashes read "spreading signal".
+    if (weatherPin) {
+      pins
+        .filter((p) => p.id !== weatherPin.id && p.status !== "critical")
+        .forEach((n) => {
+          L.polyline([weatherPin.latlng, n.latlng], {
+            color: statusColor.weather,
+            weight: 1.6,
+            opacity: 0.8,
+            dashArray: "5 6",
+            className: "arc-flow",
+          }).addTo(layer);
+        });
+    }
+
+    for (const p of pins) {
+      const isFault = p.id === faultPin?.id;
+      const isSelected = active === p.id;
+      const color = statusColor[p.status];
+      const halo = isFault
+        ? `<span class="sg-halo live-dot" style="color:${color}; opacity:0.45"></span>` +
+          `<span class="sg-halo iso-ring" style="border:2px dashed ${color}; opacity:0.55; width:38px; height:38px"></span>` +
+          `<span class="sg-halo iso-halo" style="border:2px dashed ${color}; width:42px; height:42px"></span>`
+        : "";
+      const icon = L.divIcon({
+        className: "sg-pin-ico",
+        html:
+          `<span class="sg-pin${isSelected ? " is-selected" : ""}" style="--pin:${color}">` +
+          `${halo}<span class="sg-dot"></span></span>`,
+        iconSize: [46, 46],
+        iconAnchor: [23, 23],
+      });
+      const marker = L.marker(p.latlng, { icon }).addTo(layer);
+      marker.on("click", () => selectRef.current(p.id));
+      if (isFault) {
+        marker.bindTooltip(
+          `<strong style="color:${color}">ISOLATED</strong><br>${faultShare}`,
+          { permanent: true, direction: "top", offset: [0, -12], className: "sg-tip", interactive: true },
+        );
+      } else if (p.id === weatherPin?.id) {
+        marker.bindTooltip(
+          `<strong style="color:${statusColor.weather}">${weatherChannels}</strong><br>Physically consistent across channels → genuine weather.`,
+          { permanent: true, direction: "top", offset: [0, -12], className: "sg-tip", interactive: true },
+        );
+      } else {
+        marker.bindTooltip(`${p.name}`, {
+          permanent: true,
+          direction: "bottom",
+          offset: [0, 10],
+          className: "sg-name",
+        });
+      }
+    }
+
+    const bounds = L.latLngBounds(pins.map((p) => L.latLng(p.latlng)));
+    if (bounds.isValid()) map.fitBounds(bounds.pad(0.35), { maxZoom: 6, animate: false });
+  }, [pins, active, weatherPin, faultPin, weatherChannels, faultShare]);
+
   return (
     <div className="grid grid-cols-1 gap-5 xl:grid-cols-[320px_1fr]">
-      <Card status="idle" className="flex flex-col p-5">
+      <Card status="idle" className="flex flex-col self-start p-5">
         <div className="text-sm font-semibold text-ink">Stations</div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {legend.map((l) => (
@@ -112,6 +224,7 @@ export default function MapView() {
             <button
               key={p.id}
               onClick={() => select(p.id)}
+              aria-pressed={active === p.id}
               className={`relative overflow-hidden rounded-xl border py-2.5 pl-4 pr-3 text-left transition-colors ${
                 active === p.id ? "border-azimuth/40 bg-azimuth/[0.04]" : "border-mist bg-white hover:bg-stratus/60"
               }`}
@@ -129,121 +242,14 @@ export default function MapView() {
         </div>
       </Card>
 
-      <Card status="idle" className="relative overflow-hidden p-0">
-        <div
-          className="relative h-full min-h-[520px] w-full"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, #eef3fa, #f6f8fb 60%)",
-            backgroundColor: "#f6f8fb",
-          }}
-        >
-          {/* faint graticule */}
-          <div
-            className="absolute inset-0 opacity-40"
-            style={{
-              backgroundImage:
-                "linear-gradient(#e6ebf2 1px, transparent 1px), linear-gradient(90deg, #e6ebf2 1px, transparent 1px)",
-              backgroundSize: "56px 56px",
-            }}
-          />
-
-          {/* weather corroboration arc — links the weather pin to the network */}
-          {weatherPin && arcPath && (
-            <svg
-              className="pointer-events-none absolute inset-0 h-full w-full"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              aria-hidden
-            >
-              <path d={arcPath} fill="none" stroke="var(--color-status-weather)" strokeWidth={8} strokeLinecap="round" opacity={0.1} vectorEffect="non-scaling-stroke" />
-              <path className="arc-flow" d={arcPath} fill="none" stroke="var(--color-status-weather)" strokeWidth={1.6} strokeLinecap="round" strokeDasharray="5 5" opacity={0.85} vectorEffect="non-scaling-stroke" />
-            </svg>
-          )}
-
-          {pins.map((p) => {
-            const isActive = active === p.id;
-            const isFault = p.status === "critical";
-            return (
-              <button
-                key={p.id}
-                onClick={() => select(p.id)}
-                className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${p.x}%`, top: `${p.y}%` }}
-              >
-                <span className="relative flex items-center justify-center">
-                  {isFault && (
-                    <>
-                      <span
-                        className="live-dot absolute h-6 w-6 rounded-full"
-                        style={{ color: statusColor[p.status], opacity: 0.4 }}
-                      />
-                      <span
-                        className="iso-ring pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 rounded-full border-2 border-dashed"
-                        style={{ borderColor: statusColor[p.status], opacity: 0.55 }}
-                      />
-                      <span
-                        className="iso-halo pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 rounded-full border-2 border-dashed"
-                        style={{ borderColor: statusColor[p.status] }}
-                      />
-                    </>
-                  )}
-                  <span
-                    className="relative h-3.5 w-3.5 rounded-full ring-4"
-                    style={{
-                      background: statusColor[p.status],
-                      boxShadow: `0 0 0 4px color-mix(in srgb, ${statusColor[p.status]} 22%, transparent)`,
-                    }}
-                  />
-                </span>
-                <span
-                  className={`absolute left-1/2 top-4 -translate-x-1/2 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
-                    isActive ? "bg-white text-ink shadow-card" : "text-haze"
-                  }`}
-                >
-                  {p.name}
-                </span>
-              </button>
-            );
-          })}
-
-          {/* fault: isolated-signal caption */}
-          {faultPin && (
-            <div
-              className="pointer-events-none absolute z-10"
-              style={{ left: `${faultPin.x}%`, top: `${faultPin.y}%`, transform: "translate(-50%, calc(-100% - 30px))", maxWidth: 200 }}
-            >
-              <div className="rounded-xl border bg-white/95 px-2.5 py-1.5 shadow-card backdrop-blur-sm" style={{ borderColor: "color-mix(in srgb, var(--color-status-critical) 40%, transparent)" }}>
-                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: "var(--color-status-critical)" }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-status-critical)" }} />
-                  Isolated
-                </div>
-                <div className="mt-0.5 text-[10.5px] leading-snug text-haze">{faultShare}</div>
-              </div>
+      <Card status="idle" className="p-2">
+        <div className="relative h-[480px] w-full xl:h-[620px]">
+          <div ref={containerRef} className="h-full w-full rounded-xl" />
+          <div className="pointer-events-none absolute left-9 top-8 z-[850] max-w-[260px] rounded-xl border border-mist bg-white/95 p-4 shadow-card">
+            <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: statusColor[callout.status] }}>
+              Spatial consistency
             </div>
-          )}
-
-          {/* weather: coordinated-channels arc label */}
-          {weatherPin && arcPath && (
-            <div
-              className="pointer-events-none absolute z-10"
-              style={{ left: `${arcLabel.x}%`, top: `${arcLabel.y}%`, transform: "translate(-50%, -50%)", maxWidth: 210 }}
-            >
-              <div className="rounded-xl border bg-white/95 px-2.5 py-1.5 shadow-card backdrop-blur-sm" style={{ borderColor: "color-mix(in srgb, var(--color-status-weather) 40%, transparent)" }}>
-                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: "var(--color-status-weather)" }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-status-weather)" }} />
-                  {weatherChannels}
-                </div>
-                <div className="mt-0.5 text-[10.5px] leading-snug text-haze">Physically consistent across channels → genuine weather.</div>
-              </div>
-            </div>
-          )}
-
-          <div className="absolute bottom-5 right-5 max-w-[260px] rounded-2xl border border-mist bg-white p-4 shadow-card">
-            <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: statusColor[callout.status] }}>Spatial consistency</div>
-            <p className="mt-1.5 text-[12px] leading-relaxed text-ink">
-              {callout.text}
-            </p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-ink">{callout.text}</p>
           </div>
         </div>
       </Card>

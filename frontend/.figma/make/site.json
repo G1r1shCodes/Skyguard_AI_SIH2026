@@ -1,7 +1,8 @@
 {
-  "description": "Create and customize user interfaces effortlessly with intuitive design tools that streamline development for designers and developers alike.",
+  "title": "SkyGuard AI — Weather-station fault detection",
+  "description": "SkyGuard AI — live monitoring for automated weather stations: real-time sensor-fault detection, self-healing telemetry, and fault-vs-weather explainability.",
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,

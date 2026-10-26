@@ -93,6 +93,7 @@ export default function Stations() {
         </div>
       </div>
 
+      <div data-tour="stations-table">
       <Card status="idle" className="p-2">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[920px] border-collapse text-left text-sm">
@@ -153,6 +154,7 @@ export default function Stations() {
           </table>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

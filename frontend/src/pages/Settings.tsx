@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, StatusPill } from "../components/primitives";
 import { ensembleWeights, edgeDevices } from "../components/data";
+import { clearTourSeen, startTour } from "../components/ProductTour";
 import { useStream } from "../lib/StreamProvider";
 
 const tabs = ["Detection", "Alerts", "Stations", "Edge devices"];
@@ -90,6 +91,27 @@ export default function Settings() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Card status="idle" className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-ink">Getting started</div>
+                <p className="mt-1 max-w-[60ch] text-xs leading-relaxed text-haze">
+                  New viewer? The guided tour walks through the KPIs, the live stream
+                  controls, the anomaly-injection sandbox and the drill-down table.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  clearTourSeen();
+                  startTour();
+                }}
+                className="shrink-0 rounded-xl bg-azimuth px-3.5 py-2 text-sm font-semibold text-white shadow-card transition-transform hover:-translate-y-0.5"
+              >
+                Replay tour
+              </button>
+            </div>
+          </Card>
+
           <Card status="idle" className="p-6">
             <div className="text-sm font-semibold text-ink">WMO quality-control limits</div>
             <div className="mt-3 divide-y divide-mist">
