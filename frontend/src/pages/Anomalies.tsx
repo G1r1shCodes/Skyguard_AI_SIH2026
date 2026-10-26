@@ -167,7 +167,7 @@ function Drawer({
           <div key={a.label} className="flex items-center gap-2">
             <span className="w-32 shrink-0 text-xs text-ink">{a.label}</span>
             <div className="h-4 flex-1 overflow-hidden rounded-md bg-mist/60">
-              <div className="h-full rounded-md" style={{ width: `${Math.max(a.value, 4)}%`, background: "linear-gradient(90deg,var(--color-azimuth),#14b8c4)" }} />
+              <div className="h-full rounded-md" style={{ width: `${Math.max(a.value, 4)}%`, background: "var(--color-azimuth)" }} />
             </div>
             <span className="w-9 text-right font-mono text-[11px] text-haze">{a.value}%</span>
           </div>
@@ -275,6 +275,8 @@ export default function Anomalies() {
         <div className="flex items-center gap-2 rounded-xl border border-mist bg-white px-3 py-2">
           <Search size={15} className="text-haze" />
           <input
+            type="search"
+            aria-label="Search anomalies"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search anomalies"
@@ -286,6 +288,7 @@ export default function Anomalies() {
             <button
               key={f}
               onClick={() => setSev(f)}
+              aria-pressed={sev === f}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 sev === f ? "bg-azimuth text-white" : "border border-mist bg-white text-haze hover:text-ink"
               }`}
@@ -303,6 +306,7 @@ export default function Anomalies() {
               <button
                 key={f}
                 onClick={() => setVerdictF(f)}
+                aria-pressed={verdictF === f}
                 className="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
                 style={
                   active
@@ -356,8 +360,16 @@ export default function Anomalies() {
                     return (
                       <tr
                         key={e.id}
+                        tabIndex={0}
+                        aria-label={`Inspect anomaly at ${r.station} — ${r.type}`}
                         onClick={() => setSelectedId(e.id)}
-                        className={`cursor-pointer border-b border-mist/70 transition-colors hover:bg-stratus/60 ${
+                        onKeyDown={(ev) => {
+                          if (ev.key === "Enter" || ev.key === " ") {
+                            ev.preventDefault();
+                            setSelectedId(e.id);
+                          }
+                        }}
+                        className={`cursor-pointer border-b border-mist/70 transition-colors outline-offset-[-2px] outline-none focus-visible:outline-2 focus-visible:outline-azimuth hover:bg-stratus/60 ${
                           selectedId === e.id ? "bg-azimuth/[0.04]" : ""
                         }`}
                       >

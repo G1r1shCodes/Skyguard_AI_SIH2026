@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Search, ChevronRight, MoreHorizontal } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
 import { Card, StatusPill, StatusSpine } from "../components/primitives";
 import { stationRows as mockStationRows } from "../components/data";
 import { useStream } from "../lib/StreamProvider";
@@ -69,6 +69,8 @@ export default function Stations() {
         <div className="flex items-center gap-2 rounded-xl border border-mist bg-white px-3 py-2">
           <Search size={15} className="text-haze" />
           <input
+            type="search"
+            aria-label="Search stations"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search stations"
@@ -80,6 +82,7 @@ export default function Stations() {
             <button
               key={t}
               onClick={() => setType(t)}
+              aria-pressed={type === t}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 type === t ? "bg-azimuth text-white" : "border border-mist bg-white text-haze hover:text-ink"
               }`}
@@ -110,8 +113,16 @@ export default function Stations() {
               {rows.map((r) => (
                 <tr
                   key={r.id}
+                  tabIndex={0}
+                  aria-label={`Open ${r.name} station detail`}
                   onClick={() => navigate(`/stations/${r.id}`)}
-                  className="group cursor-pointer border-b border-mist/70 transition-colors hover:bg-stratus/60"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/stations/${r.id}`);
+                    }
+                  }}
+                  className="group cursor-pointer border-b border-mist/70 transition-colors outline-offset-[-2px] outline-none focus-visible:outline-2 focus-visible:outline-azimuth hover:bg-stratus/60"
                 >
                   <td className="relative px-4 py-3">
                     <StatusSpine status={r.status} />
@@ -133,8 +144,7 @@ export default function Stations() {
                   <td className="px-4 py-3 font-mono text-[13px] text-ink">{r.anomalies}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1 text-haze">
-                      <ChevronRight size={16} className="opacity-0 transition-opacity group-hover:opacity-100" />
-                      <MoreHorizontal size={16} />
+                      <ChevronRight size={16} className="opacity-0 transition-opacity group-hover:opacity-100 group-hover:translate-x-0.5 group-focus-within:opacity-100" />
                     </div>
                   </td>
                 </tr>

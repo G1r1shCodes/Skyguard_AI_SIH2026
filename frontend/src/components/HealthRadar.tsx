@@ -15,7 +15,7 @@ function Gauge({ value }: { value: number }) {
     value > 75 ? "var(--color-status-normal)" : value >= 50 ? "var(--color-status-warning)" : "var(--color-status-critical)";
   const label = value > 75 ? "Healthy" : value >= 50 ? "Degrading" : "At risk";
   return (
-    <svg viewBox="0 0 200 116" className="w-full max-w-[220px]">
+    <svg viewBox="0 0 200 116" role="img" aria-label={`Sensor health gauge: ${value} out of 100 — ${label}`} className="w-full max-w-[220px]">
       <path d="M22 100 A78 78 0 0 1 178 100" fill="none" stroke="#eef2f7" strokeWidth={12} strokeLinecap="round" />
       <path
         d={`M22 100 A78 78 0 0 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`}

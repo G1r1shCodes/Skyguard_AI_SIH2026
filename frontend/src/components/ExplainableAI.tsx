@@ -241,7 +241,7 @@ export default function ExplainableAI() {
                 className="flex h-full items-center justify-end rounded-lg pr-2"
                 style={{
                   width: `${Math.max(a.value, 6)}%`,
-                  background: "linear-gradient(90deg, var(--color-azimuth), #14b8c4)",
+                  background: "var(--color-azimuth)",
                 }}
               >
                 <span className="font-mono text-[11px] font-medium text-white">{a.value}%</span>
